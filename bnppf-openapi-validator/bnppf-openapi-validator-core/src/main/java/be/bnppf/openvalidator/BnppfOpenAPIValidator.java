@@ -499,10 +499,16 @@ public class BnppfOpenAPIValidator {
         // Add body if present with content type
         if (payload != null && !payload.isEmpty()) {
             if (contentType != null) {
-                requestBuilder.withBody(payload).withContentType(contentType);
+                requestBuilder.withBody(payload);
+                requestBuilder.withContentType(contentType);
             } else {
                 requestBuilder.withBody(payload);
             }
+        }
+
+        // Also set Content-Type header explicitly if not already in headers
+        if (contentType != null && payload != null && !payload.isEmpty()) {
+            requestBuilder.withHeader("Content-Type", contentType);
         }
 
         // Add query parameters
@@ -558,11 +564,15 @@ public class BnppfOpenAPIValidator {
 
         // Add body if present with content type
         if (payload != null && !payload.isEmpty()) {
+            responseBuilder.withBody(payload);
             if (contentType != null) {
-                responseBuilder.withBody(payload).withContentType(contentType);
-            } else {
-                responseBuilder.withBody(payload);
+                responseBuilder.withContentType(contentType);
             }
+        }
+
+        // Also set Content-Type header explicitly if not already in headers
+        if (contentType != null && payload != null && !payload.isEmpty()) {
+            responseBuilder.withHeader("Content-Type", contentType);
         }
 
         // Add headers
