@@ -1,0 +1,750 @@
+openapi: "3.0.3"
+info:
+  title: Petstore API
+  description: A sample API for testing OpenAPI validation
+  version: "1.0.0"
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+tags:
+  - name: pets
+    description: Operations related to pets
+  - name: stores
+    description: Operations related to stores
+  - name: orders
+    description: Operations related to orders
+
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      description: Returns a list of all pets in the store
+      operationId: listPets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of pets to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of pets to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: status
+          in: query
+          description: Filter by status
+          required: false
+          schema:
+            type: string
+            enum:
+              - available
+              - pending
+              - sold
+        - name: tags
+          in: query
+          description: Filter by tags
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+        - name: X-Request-ID
+          in: header
+          description: Unique request identifier
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A list of pets
+          headers:
+            X-Total-Count:
+              description: Total number of pets
+              schema:
+                type: integer
+            X-Request-ID:
+              description: Echo of the request ID
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    post:
+      summary: Create a new pet
+      description: Creates a new pet in the store
+      operationId: createPet
+      tags:
+        - pets
+      parameters:
+        - name: X-Request-ID
+          in: header
+          description: Unique request identifier
+          required: false
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Pet to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPet"
+      responses:
+        "201":
+          description: Pet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Pet already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        description: The ID of the pet
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+
+    get:
+      summary: Get a pet by ID
+      description: Returns a single pet by its ID
+      operationId: getPetById
+      tags:
+        - pets
+      responses:
+        "200":
+          description: Pet found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    put:
+      summary: Update a pet
+      description: Updates an existing pet
+      operationId: updatePet
+      tags:
+        - pets
+      requestBody:
+        description: Pet data to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePet"
+      responses:
+        "200":
+          description: Pet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    patch:
+      summary: Partially update a pet
+      description: Partially updates an existing pet
+      operationId: patchPet
+      tags:
+        - pets
+      requestBody:
+        description: Pet fields to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchPet"
+      responses:
+        "200":
+          description: Pet updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    delete:
+      summary: Delete a pet
+      description: Deletes a pet by ID
+      operationId: deletePet
+      tags:
+        - pets
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: API key for authorization
+          required: true
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 100
+      responses:
+        "204":
+          description: Pet deleted successfully
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /pets/{petId}/image:
+    parameters:
+      - name: petId
+        in: path
+        description: The ID of the pet
+        required: true
+        schema:
+          type: integer
+          format: int64
+
+    post:
+      summary: Upload pet image
+      description: Upload an image for a pet
+      operationId: uploadPetImage
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The image file
+                description:
+                  type: string
+                  maxLength: 500
+                  description: Optional description for the image
+      responses:
+        "200":
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    format: uri
+                  message:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /stores:
+    get:
+      summary: List all stores
+      operationId: listStores
+      tags:
+        - stores
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - name: country
+          in: query
+          schema:
+            type: string
+            pattern: "^[A-Z]{2}$"
+      responses:
+        "200":
+          description: List of stores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Store"
+
+  /stores/{storeId}:
+    get:
+      summary: Get store by ID
+      operationId: getStoreById
+      tags:
+        - stores
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Store found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /orders:
+    post:
+      summary: Create an order
+      operationId: createOrder
+      tags:
+        - orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewOrder"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /orders/{orderId}:
+    get:
+      summary: Get order by ID
+      operationId: getOrderById
+      tags:
+        - orders
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the pet
+          example: 12345
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Name of the pet
+          example: "Fluffy"
+        tag:
+          type: string
+          maxLength: 50
+          description: Optional tag for the pet
+          example: "cat"
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+          description: Status of the pet in the store
+          example: "available"
+        category:
+          $ref: "#/components/schemas/Category"
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 0
+          maxItems: 10
+          description: URLs to photos of the pet
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+          minItems: 0
+          maxItems: 20
+        createdAt:
+          type: string
+          format: date-time
+          description: When the pet was added
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the pet was last updated
+
+    NewPet:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Name of the pet
+          example: "Fluffy"
+        tag:
+          type: string
+          maxLength: 50
+          description: Optional tag for the pet
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+          default: "available"
+        category:
+          $ref: "#/components/schemas/Category"
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 0
+          maxItems: 10
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+
+    UpdatePet:
+      type: object
+      required:
+        - name
+        - status
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        tag:
+          type: string
+          maxLength: 50
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+        category:
+          $ref: "#/components/schemas/Category"
+        photoUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+
+    PatchPet:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        tag:
+          type: string
+          maxLength: 50
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+        category:
+          $ref: "#/components/schemas/Category"
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    Tag:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+
+    Store:
+      type: object
+      required:
+        - id
+        - name
+        - address
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        address:
+          $ref: "#/components/schemas/Address"
+        phone:
+          type: string
+          pattern: "^\\+?[1-9]\\d{1,14}$"
+        email:
+          type: string
+          format: email
+        openingHours:
+          type: object
+          additionalProperties:
+            type: string
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - country
+      properties:
+        street:
+          type: string
+          minLength: 1
+          maxLength: 200
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+        state:
+          type: string
+          maxLength: 100
+        zipCode:
+          type: string
+          pattern: "^[0-9]{5}(-[0-9]{4})?$"
+        country:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          description: ISO 3166-1 alpha-2 country code
+
+    Order:
+      type: object
+      required:
+        - id
+        - petId
+        - quantity
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        petId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 100
+        shipDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - placed
+            - approved
+            - delivered
+            - cancelled
+        complete:
+          type: boolean
+          default: false
+        totalPrice:
+          type: number
+          format: double
+          minimum: 0
+
+    NewOrder:
+      type: object
+      required:
+        - petId
+        - quantity
+      properties:
+        petId:
+          type: integer
+          format: int64
+          minimum: 1
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 100
+        shipDate:
+          type: string
+          format: date-time
+        shippingAddress:
+          $ref: "#/components/schemas/Address"
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
