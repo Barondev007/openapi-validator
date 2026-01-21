@@ -9,7 +9,7 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport.Level;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.OpenAPIParser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.slf4j.Logger;
@@ -409,7 +409,7 @@ public class BnppfOpenAPIValidator {
         options.setResolve(true);
         options.setResolveFully(true);
 
-        SwaggerParseResult result = new OpenAPIV3Parser().readContents(content, null, options);
+        SwaggerParseResult result = new OpenAPIParser().readContents(content, null, options);
 
         if (result.getMessages() != null && !result.getMessages().isEmpty()) {
             specificationErrors.addAll(result.getMessages());
