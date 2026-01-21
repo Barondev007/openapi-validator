@@ -482,9 +482,27 @@ public class BnppfOpenAPIValidator {
 
         Builder requestBuilder = new Builder(method, path);
 
-        // Add body if present
+        // Extract Content-Type from headers for body processing
+        String contentType = null;
+        if (headers != null) {
+            for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+                if ("Content-Type".equalsIgnoreCase(entry.getKey())) {
+                    Collection<String> values = entry.getValue();
+                    if (values != null && !values.isEmpty()) {
+                        contentType = values.iterator().next();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Add body if present with content type
         if (payload != null && !payload.isEmpty()) {
-            requestBuilder.withBody(payload);
+            if (contentType != null) {
+                requestBuilder.withBody(payload).withContentType(contentType);
+            } else {
+                requestBuilder.withBody(payload);
+            }
         }
 
         // Add query parameters
@@ -524,9 +542,27 @@ public class BnppfOpenAPIValidator {
                                    Map<String, Collection<String>> headers) {
         SimpleResponse.Builder responseBuilder = new SimpleResponse.Builder(statusCode);
 
-        // Add body if present
+        // Extract Content-Type from headers for body processing
+        String contentType = null;
+        if (headers != null) {
+            for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+                if ("Content-Type".equalsIgnoreCase(entry.getKey())) {
+                    Collection<String> values = entry.getValue();
+                    if (values != null && !values.isEmpty()) {
+                        contentType = values.iterator().next();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Add body if present with content type
         if (payload != null && !payload.isEmpty()) {
-            responseBuilder.withBody(payload);
+            if (contentType != null) {
+                responseBuilder.withBody(payload).withContentType(contentType);
+            } else {
+                responseBuilder.withBody(payload);
+            }
         }
 
         // Add headers
