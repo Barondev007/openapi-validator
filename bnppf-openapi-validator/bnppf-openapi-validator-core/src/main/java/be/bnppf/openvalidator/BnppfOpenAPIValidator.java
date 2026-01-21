@@ -9,7 +9,8 @@ import com.atlassian.oai.validator.model.SimpleResponse;
 import com.atlassian.oai.validator.report.LevelResolver;
 import com.atlassian.oai.validator.report.ValidationReport.Level;
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.parser.OpenAPIParser;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.converter.SwaggerConverter;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.slf4j.Logger;
@@ -403,13 +404,23 @@ public class BnppfOpenAPIValidator {
 
     /**
      * Parse the OpenAPI specification from content.
+     * Supports both Swagger 2.0 and OpenAPI 3.x specifications.
      */
     private OpenAPI parseSpecification(String content) {
         ParseOptions options = new ParseOptions();
         options.setResolve(true);
         options.setResolveFully(true);
 
-        SwaggerParseResult result = new OpenAPIParser().readContents(content, null, options);
+        SwaggerParseResult result;
+
+        // Detect if this is a Swagger 2.0 spec
+        if (isSwagger2Spec(content)) {
+            // Use SwaggerConverter for Swagger 2.0 specs
+            result = new SwaggerConverter().readContents(content, null, options);
+        } else {
+            // Use OpenAPIV3Parser for OpenAPI 3.x specs
+            result = new OpenAPIV3Parser().readContents(content, null, options);
+        }
 
         if (result.getMessages() != null && !result.getMessages().isEmpty()) {
             specificationErrors.addAll(result.getMessages());
@@ -419,6 +430,15 @@ public class BnppfOpenAPIValidator {
         }
 
         return result.getOpenAPI();
+    }
+
+    /**
+     * Detect if the content is a Swagger 2.0 specification.
+     */
+    private boolean isSwagger2Spec(String content) {
+        // Check for "swagger" key which indicates Swagger 2.0
+        // OpenAPI 3.x uses "openapi" key instead
+        return content.contains("\"swagger\"") || content.contains("swagger:");
     }
 
     /**
