@@ -596,7 +596,7 @@ class IntegrationTest {
             assertThat(report.hasErrors()).isTrue();
             assertThat(report.getErrors()).isNotEmpty();
             assertThat(report.getMessagesAsString()).isNotEmpty();
-            assertThat(report.toJson()).contains("\"valid\":false");
+            assertThat(report.toJson()).contains("\"valid\" : false");
         }
 
         @Test

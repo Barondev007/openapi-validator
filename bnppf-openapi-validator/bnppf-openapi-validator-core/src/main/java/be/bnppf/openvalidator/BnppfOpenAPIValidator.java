@@ -381,11 +381,22 @@ public class BnppfOpenAPIValidator {
 
     /**
      * Check if the loaded specification is valid.
+     * A specification is considered valid if it was successfully parsed.
+     * Parser warnings (e.g., from Swagger 2.0 conversion) don't make a spec invalid.
      *
      * @return true if specification is valid
      */
     public boolean isSpecificationValid() {
-        return openAPI != null && specificationErrors.isEmpty();
+        return openAPI != null;
+    }
+
+    /**
+     * Get any parser messages/warnings from loading the specification.
+     *
+     * @return list of parser messages (may include warnings, not just errors)
+     */
+    public List<String> getSpecificationParseMessages() {
+        return Collections.unmodifiableList(specificationErrors);
     }
 
     // ========== PRIVATE HELPER METHODS ==========
