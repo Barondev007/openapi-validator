@@ -58,9 +58,17 @@ def invoke(msg) {
         def debugStr = msg.get("validationDebug") ?: "false"
         def debug = "true".equalsIgnoreCase(debugStr.toString())
 
-        // Get or create validator instance
-        def validator = BnppfOpenAPIValidator.getInstanceFromFile(specFile.toString())
-        validator.setValidationLevel(validationLevel)
+        // Load specification content from file
+        def specContent = loadSpecificationFile(specFile.toString())
+        if (specContent == null || specContent.trim().isEmpty()) {
+            Trace.error("BnppfRequestValidation: Failed to load specification from: ${specFile}")
+            msg.put("circuit.failure.reason", "Failed to load OpenAPI specification")
+            msg.put("http.response.status", 500)
+            return false
+        }
+
+        // Get or create validator instance from content string
+        def validator = BnppfOpenAPIValidator.getInstance(specContent, validationLevel)
         validator.setDebug(debug)
 
         // Optionally configure cache size for high-traffic scenarios
@@ -230,4 +238,19 @@ def convertQueryParams(queryParams) {
     }
 
     return paramMap
+}
+
+/**
+ * Load specification content from a file.
+ *
+ * @param filePath Path to the OpenAPI specification file
+ * @return The specification content as a string, or null if loading fails
+ */
+def loadSpecificationFile(String filePath) {
+    try {
+        return new File(filePath).text
+    } catch (Exception e) {
+        Trace.error("BnppfRequestValidation: Failed to read specification file: ${filePath}", e)
+        return null
+    }
 }

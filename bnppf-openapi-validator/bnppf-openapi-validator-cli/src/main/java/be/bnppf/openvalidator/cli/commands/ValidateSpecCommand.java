@@ -9,6 +9,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
 /**
@@ -62,13 +70,11 @@ public class ValidateSpecCommand implements Callable<Integer> {
         ValidationLevel validationLevel = ValidationLevel.fromString(level);
 
         try {
-            // Load the specification
-            BnppfOpenAPIValidator validator;
-            if (specPath.startsWith("http://") || specPath.startsWith("https://")) {
-                validator = BnppfOpenAPIValidator.getInstanceFromUrl(specPath, validationLevel);
-            } else {
-                validator = BnppfOpenAPIValidator.getInstanceFromFile(specPath, validationLevel);
-            }
+            // Load the specification content
+            String specContent = loadSpecification(specPath);
+
+            // Create validator from content string
+            BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(specContent, validationLevel);
 
             // Validate the specification
             ValidationReport report = validator.validateSpecification();
@@ -88,6 +94,9 @@ public class ValidateSpecCommand implements Callable<Integer> {
         } catch (IllegalArgumentException e) {
             System.err.println(formatter.formatError(e.getMessage()));
             return 1;
+        } catch (IOException e) {
+            System.err.println(formatter.formatError("Failed to load specification: " + e.getMessage()));
+            return 1;
         } catch (Exception e) {
             System.err.println(formatter.formatError("Unexpected error: " + e.getMessage()));
             if (isVerbose()) {
@@ -97,9 +106,46 @@ public class ValidateSpecCommand implements Callable<Integer> {
         }
     }
 
+    /**
+     * Load specification content from a file path or URL.
+     *
+     * @param path the file path or URL
+     * @return the specification content as a string
+     * @throws IOException if the specification cannot be loaded
+     */
+    private String loadSpecification(String path) throws IOException {
+        if (path.startsWith("http://") || path.startsWith("https://")) {
+            return loadFromUrl(path);
+        } else {
+            return loadFromFile(path);
+        }
+    }
+
+    /**
+     * Load specification content from a file.
+     */
+    private String loadFromFile(String filePath) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Load specification content from a URL.
+     */
+    private String loadFromUrl(String urlString) throws IOException {
+        URL url = new URL(urlString);
+        try (InputStream is = url.openStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            return sb.toString();
+        }
+    }
+
     private boolean isVerbose() {
         // Check if parent command has verbose flag set
-        // This is a simplified check - in a real implementation, you'd access the parent's verbose field
         return false;
     }
 }

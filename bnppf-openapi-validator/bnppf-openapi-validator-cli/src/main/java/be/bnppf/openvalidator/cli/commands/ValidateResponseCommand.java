@@ -11,7 +11,9 @@ import picocli.CommandLine.Option;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -131,13 +133,11 @@ public class ValidateResponseCommand implements Callable<Integer> {
             // Parse headers
             Map<String, Collection<String>> headerMap = parseHeaders();
 
-            // Load the specification
-            BnppfOpenAPIValidator validator;
-            if (specPath.startsWith("http://") || specPath.startsWith("https://")) {
-                validator = BnppfOpenAPIValidator.getInstanceFromUrl(specPath, validationLevel);
-            } else {
-                validator = BnppfOpenAPIValidator.getInstanceFromFile(specPath, validationLevel);
-            }
+            // Load the specification content
+            String specContent = loadSpecification(specPath);
+
+            // Create validator from content string
+            BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(specContent, validationLevel);
 
             // Validate the response
             ValidationReport report = validator.validateResponse(
@@ -214,5 +214,33 @@ public class ValidateResponseCommand implements Callable<Integer> {
         }
 
         return headerMap;
+    }
+
+    /**
+     * Load specification content from a file path or URL.
+     */
+    private String loadSpecification(String specPath) throws IOException {
+        if (specPath.startsWith("http://") || specPath.startsWith("https://")) {
+            return loadFromUrl(specPath);
+        } else {
+            return loadFromFile(specPath);
+        }
+    }
+
+    private String loadFromFile(String filePath) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8);
+    }
+
+    private String loadFromUrl(String urlString) throws IOException {
+        URL url = new URL(urlString);
+        try (InputStream is = url.openStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            return sb.toString();
+        }
     }
 }

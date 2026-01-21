@@ -144,28 +144,37 @@ For high-traffic APIs with many unique paths, increase this value to improve per
 
 ## Loading Specifications
 
-### From Inline String
+The core library only supports loading specifications from strings. This design choice keeps the core library simple and focused on validation, while leaving file/URL loading to the calling application.
+
+### From String
 
 ```java
 String specContent = "openapi: '3.0.3'\ninfo:\n  title: My API...";
 BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(specContent);
 ```
 
-### From File
+### Loading from File or URL
+
+File and URL loading should be handled by your application before passing to the validator:
 
 ```java
-BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstanceFromFile("/path/to/openapi.yaml");
+// From file
+String specContent = Files.readString(Path.of("/path/to/openapi.yaml"));
+BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(specContent);
+
+// From URL
+String specContent = new URL("https://api.example.com/openapi.yaml")
+    .openStream()
+    .readAllBytes()
+    .toString();
+BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(specContent);
 ```
 
-### From URL
-
-```java
-BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstanceFromUrl("https://api.example.com/openapi.yaml");
-```
+The CLI tool handles file and URL loading internally, so you can still use paths and URLs with CLI commands.
 
 ### With Validation Level
 
-All factory methods accept an optional `ValidationLevel` parameter:
+The `getInstance` method accepts an optional `ValidationLevel` parameter:
 
 ```java
 BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstance(

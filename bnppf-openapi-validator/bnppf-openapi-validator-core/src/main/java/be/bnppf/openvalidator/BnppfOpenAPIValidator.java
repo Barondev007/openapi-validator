@@ -15,13 +15,9 @@ import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -122,93 +118,6 @@ public class BnppfOpenAPIValidator {
 
         String hash = computeHash(specContent);
         return instances.computeIfAbsent(hash, h -> new BnppfOpenAPIValidator(specContent, h, validationLevel));
-    }
-
-    /**
-     * Get or create a validator instance from a file path.
-     *
-     * @param specFilePath Path to the specification file
-     * @return BnppfOpenAPIValidator instance
-     * @throws IllegalArgumentException if specFilePath is null, empty, or file cannot be read
-     */
-    public static BnppfOpenAPIValidator getInstanceFromFile(String specFilePath) {
-        return getInstanceFromFile(specFilePath, ValidationLevel.LENIENT);
-    }
-
-    /**
-     * Get or create a validator instance from a file path with validation level.
-     *
-     * @param specFilePath    Path to the specification file
-     * @param validationLevel The validation strictness level
-     * @return BnppfOpenAPIValidator instance
-     * @throws IllegalArgumentException if specFilePath is null, empty, or file cannot be read
-     */
-    public static BnppfOpenAPIValidator getInstanceFromFile(String specFilePath, ValidationLevel validationLevel) {
-        if (specFilePath == null || specFilePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("Specification file path cannot be null or empty");
-        }
-
-        try {
-            Path path = Paths.get(specFilePath);
-            String content = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-            return getInstance(content, validationLevel);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read specification file: " + specFilePath, e);
-        }
-    }
-
-    /**
-     * Get or create a validator instance from a URL.
-     *
-     * @param specUrl URL to fetch the specification from
-     * @return BnppfOpenAPIValidator instance
-     * @throws IllegalArgumentException if specUrl is null, empty, or specification cannot be fetched
-     */
-    public static BnppfOpenAPIValidator getInstanceFromUrl(String specUrl) {
-        return getInstanceFromUrl(specUrl, ValidationLevel.LENIENT);
-    }
-
-    /**
-     * Get or create a validator instance from a URL with validation level.
-     *
-     * @param specUrl         URL to fetch the specification from
-     * @param validationLevel The validation strictness level
-     * @return BnppfOpenAPIValidator instance
-     * @throws IllegalArgumentException if specUrl is null, empty, or specification cannot be fetched
-     */
-    public static BnppfOpenAPIValidator getInstanceFromUrl(String specUrl, ValidationLevel validationLevel) {
-        if (specUrl == null || specUrl.trim().isEmpty()) {
-            throw new IllegalArgumentException("Specification URL cannot be null or empty");
-        }
-
-        // Use the OpenAPI parser to fetch from URL
-        ParseOptions options = new ParseOptions();
-        options.setResolve(true);
-        options.setResolveFully(true);
-
-        SwaggerParseResult result = new OpenAPIV3Parser().readLocation(specUrl, null, options);
-
-        if (result.getOpenAPI() == null) {
-            String errors = result.getMessages() != null ? String.join(", ", result.getMessages()) : "Unknown error";
-            throw new IllegalArgumentException("Failed to parse specification from URL: " + specUrl + ". Errors: " + errors);
-        }
-
-        // We need the raw content for hashing, so fetch it separately
-        try {
-            java.net.URL url = new java.net.URL(specUrl);
-            try (java.io.InputStream is = url.openStream();
-                 java.io.BufferedReader reader = new java.io.BufferedReader(
-                         new java.io.InputStreamReader(is, StandardCharsets.UTF_8))) {
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-                return getInstance(sb.toString(), validationLevel);
-            }
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to fetch specification from URL: " + specUrl, e);
-        }
     }
 
     /**

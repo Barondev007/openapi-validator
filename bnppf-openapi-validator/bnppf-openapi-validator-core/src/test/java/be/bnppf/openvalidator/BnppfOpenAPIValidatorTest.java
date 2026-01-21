@@ -5,12 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,31 +101,11 @@ class BnppfOpenAPIValidatorTest {
         }
 
         @Test
-        @DisplayName("getInstanceFromFile with valid file returns validator")
-        void getInstanceFromFile_ValidFile_ReturnsValidator(@TempDir Path tempDir) throws IOException {
-            Path specFile = tempDir.resolve("test-spec.yaml");
-            Files.write(specFile, SIMPLE_SPEC.getBytes(StandardCharsets.UTF_8));
-
-            BnppfOpenAPIValidator validator = BnppfOpenAPIValidator.getInstanceFromFile(specFile.toString());
-
-            assertThat(validator).isNotNull();
-            assertThat(validator.isSpecificationValid()).isTrue();
-        }
-
-        @Test
-        @DisplayName("getInstanceFromFile with null path throws exception")
-        void getInstanceFromFile_NullPath_ThrowsException() {
-            assertThatThrownBy(() -> BnppfOpenAPIValidator.getInstanceFromFile(null))
+        @DisplayName("getInstance with whitespace-only spec throws exception")
+        void getInstance_WhitespaceSpec_ThrowsException() {
+            assertThatThrownBy(() -> BnppfOpenAPIValidator.getInstance("   "))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("null or empty");
-        }
-
-        @Test
-        @DisplayName("getInstanceFromFile with non-existent file throws exception")
-        void getInstanceFromFile_NonExistentFile_ThrowsException() {
-            assertThatThrownBy(() -> BnppfOpenAPIValidator.getInstanceFromFile("/non/existent/file.yaml"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Failed to read");
         }
     }
 
