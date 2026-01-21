@@ -477,6 +477,10 @@ public class BnppfOpenAPIValidator {
                         .withLevel("validation.request.body.schema.maxLength", Level.IGNORE)
                         .withLevel("validation.request.body.schema.minItems", Level.IGNORE)
                         .withLevel("validation.request.body.schema.maxItems", Level.IGNORE)
+                        // Ignore undefined/unexpected query parameters
+                        .withLevel("validation.request.parameter.query.unexpected", Level.IGNORE)
+                        // Ignore undefined/unexpected headers
+                        .withLevel("validation.request.parameter.header.unexpected", Level.IGNORE)
                         .build());
                 break;
 
@@ -491,6 +495,10 @@ public class BnppfOpenAPIValidator {
                         // Make pattern validation warnings
                         .withLevel("validation.request.body.schema.pattern", Level.WARN)
                         .withLevel("validation.response.body.schema.pattern", Level.WARN)
+                        // Ignore undefined/unexpected query parameters
+                        .withLevel("validation.request.parameter.query.unexpected", Level.IGNORE)
+                        // Ignore undefined/unexpected headers
+                        .withLevel("validation.request.parameter.header.unexpected", Level.IGNORE)
                         .build());
                 break;
 
