@@ -522,8 +522,7 @@ public class BnppfOpenAPIValidator {
      */
     private Response buildResponse(String payload, int statusCode,
                                    Map<String, Collection<String>> headers) {
-        SimpleResponse.Builder responseBuilder = SimpleResponse.builder()
-                .withStatusCode(statusCode);
+        SimpleResponse.Builder responseBuilder = new SimpleResponse.Builder(statusCode);
 
         // Add body if present
         if (payload != null && !payload.isEmpty()) {
