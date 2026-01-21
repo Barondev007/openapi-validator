@@ -544,7 +544,12 @@ class IntegrationTest {
                 String swagger2Spec = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                 swagger2Validator = BnppfOpenAPIValidator.getInstance(swagger2Spec, ValidationLevel.STRICT);
 
-                assertThat(swagger2Validator.isSpecificationValid()).isTrue();
+                // Provide detailed error info if spec is invalid
+                assertThat(swagger2Validator.isSpecificationValid())
+                        .as("Swagger 2.0 spec should be valid. Parser messages: %s, OpenAPI: %s",
+                            swagger2Validator.getSpecificationParseMessages(),
+                            swagger2Validator.getOpenAPI() != null ? "parsed" : "null")
+                        .isTrue();
             }
         }
 
