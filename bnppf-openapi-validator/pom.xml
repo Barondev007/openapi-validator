@@ -32,7 +32,6 @@
 
     <modules>
         <module>bnppf-openapi-validator-core</module>
-        <module>bnppf-openapi-validator-cli</module>
     </modules>
 
     <dependencyManagement>

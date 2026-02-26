@@ -4,57 +4,75 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>be.bnppf</groupId>
-        <artifactId>bnppf-openapi-validator</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
-    </parent>
-
+    <groupId>be.bnppf</groupId>
     <artifactId>bnppf-openapi-validator-cli</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BNPPF OpenAPI Validator CLI</name>
     <description>Command-line interface for OpenAPI/Swagger validation</description>
 
+    <properties>
+        <java.version>11</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions -->
+        <bnppf-openapi-validator-core.version>1.0.0-SNAPSHOT</bnppf-openapi-validator-core.version>
+        <picocli.version>4.7.5</picocli.version>
+        <logback.version>1.5.3</logback.version>
+
+        <!-- Test dependency versions -->
+        <junit.version>5.10.2</junit.version>
+        <assertj.version>3.25.3</assertj.version>
+    </properties>
+
     <dependencies>
-        <!-- Core validator module -->
+        <!-- Core validator module - the only project dependency -->
         <dependency>
             <groupId>be.bnppf</groupId>
             <artifactId>bnppf-openapi-validator-core</artifactId>
-            <version>${project.version}</version>
+            <version>${bnppf-openapi-validator-core.version}</version>
         </dependency>
 
         <!-- Picocli for CLI -->
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
+            <version>${picocli.version}</version>
         </dependency>
 
         <!-- Logging implementation for CLI -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -64,7 +82,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
                 <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>info.picocli</groupId>
@@ -80,10 +101,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -98,6 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
